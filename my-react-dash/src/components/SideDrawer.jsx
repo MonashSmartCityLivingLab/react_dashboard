@@ -37,7 +37,7 @@ export default function SideDrawer() {
           <List>
             {[
               { text: "Dashboard", link: "/dashboard", icon: <DashboardIcon/> },
-              { text: "Appliances", icon: <DevicesIcon/>},
+              { text: "Appliances", link: "/appliances", icon: <DevicesIcon/>},
               { text: "Load Disaggregation", icon: <CategoryIcon/>},
               { text: "Prediction", icon: <BarChartIcon/>},
               { text: "Device Control", icon: <ControlCameraIcon/>},
