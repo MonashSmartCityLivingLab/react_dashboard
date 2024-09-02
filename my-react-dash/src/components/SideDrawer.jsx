@@ -38,8 +38,8 @@ export default function SideDrawer() {
             {[
               { text: "Dashboard", link: "/dashboard", icon: <DashboardIcon/> },
               { text: "Appliances", link: "/appliances", icon: <DevicesIcon/>},
-              { text: "Load Disaggregation", icon: <CategoryIcon/>},
-              { text: "Prediction", icon: <BarChartIcon/>},
+              { text: "Load Disaggregation", link:"/loaddis", icon: <CategoryIcon/>},
+              { text: "Prediction", link:"/prediction", icon: <BarChartIcon/>},
               { text: "Device Control", icon: <ControlCameraIcon/>},
               { text: "Data Analysis", icon: <AnalyticsIcon/>},
               { text: "Help", icon: <HelpIcon/>},
