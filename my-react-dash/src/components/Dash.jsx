@@ -13,6 +13,8 @@ const Dashboard = () => {
   const [selectedPlug, setSelectedPlug] = useState("");
   const [smartPlugs, setSmartPlugs] = useState([]);
   const [selectedFields, setSelectedFields] = useState([]);
+  const [averageData, setAverageData] = useState([]);
+  const [selectedDay, setSelectedDay] = useState("");
 
   // Fetch smart plugs data when the component mounts
   useEffect(() => {
@@ -22,6 +24,22 @@ const Dashboard = () => {
     };
 
     fetchData();
+  }, []);
+
+  // Fetch central meter data from cloud server
+  // Fetch average data on component mount
+  useEffect(() => {
+    const fetchAverageData = async () => {
+      try {
+        const response = await fetch("http://localhost:3001/cloud-data");
+        const data = await response.json();
+        setAverageData(data);
+      } catch (error) {
+        console.error("Error fetching average data:", error);
+      }
+    };
+
+    fetchAverageData();
   }, []);
 
   // Handle plug selection change
@@ -34,9 +52,18 @@ const Dashboard = () => {
     setSelectedFields(event.target.value);
   };
 
-// Find the selected plug's information using the alias
-const selectedPlugInfo = smartPlugs.find((plug) => plug.alias === selectedPlug);
+  // Handle day selection
+  const handleDayChange = (event) => {
+    setSelectedDay(event.target.value);
+  };
 
+  // Find the selected day's average data
+  const selectedDayData = averageData.find((data) => data.date === selectedDay);
+  // Find the selected plug's information using the alias
+  const selectedPlugInfo = smartPlugs.find((plug) => plug.alias === selectedPlug);
+
+  // Extract all unique days from the average data
+  const availableDays = [...new Set(averageData.map((data) => data.date))];
   // Fields available for selection
   const availableFields = ["timestamp", "current"]; // Adjust fields as needed based on your data
 
@@ -50,6 +77,39 @@ const selectedPlugInfo = smartPlugs.find((plug) => plug.alias === selectedPlug);
               <Typography variant="h6" gutterBottom>
                 Energy Usage Trend
               </Typography>
+              <FormControl fullWidth variant="outlined" sx={{ mt: 2 }}>
+                <InputLabel id="day-select-label">Select Day</InputLabel>
+                <Select
+                  labelId="day-select-label"
+                  value={selectedDay}
+                  onChange={handleDayChange}
+                  label="Select Day"
+                >
+                  {availableDays.map((day) => (
+                    <MenuItem key={day} value={day}>
+                      {day}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              {selectedDayData ? (
+                <Box sx={{ mt: 2 }}>
+                  <Typography variant="body1">
+                    <strong>Average Consumption:</strong>{" "}
+                    {selectedDayData.averageConsumption
+                      ? selectedDayData.averageConsumption.toFixed(4) + " kWh"
+                      : "N/A"}
+                  </Typography>
+                  <Typography variant="body1">
+                    <strong>Average Cost:</strong>{" "}
+                    {selectedDayData.averageCost ? "$" + selectedDayData.averageCost.toFixed(4) : "N/A"}
+                  </Typography>
+                </Box>
+              ) : (
+                <Typography variant="body1" sx={{ mt: 2 }}>
+                  No data available for the selected day.
+                </Typography>
+              )}
             </Paper>
           </Box>
           <Box>
@@ -67,13 +127,13 @@ const selectedPlugInfo = smartPlugs.find((plug) => plug.alias === selectedPlug);
                 >
                   {smartPlugs.map((plug) => (
                     <MenuItem key={plug.id} value={plug.alias}>
-                    {plug.alias}
+                      {plug.alias}
                     </MenuItem>
                   ))}
                 </Select>
               </FormControl>
               {selectedPlugInfo && (
-                <Box sx={{ mt: 2, maxHeight: '400px', overflowY: 'auto' }}>
+                <Box sx={{ mt: 2, maxHeight: "400px", overflowY: "auto" }}>
                   <Typography variant="body1">Data Fields:</Typography>
                   <FormControl fullWidth variant="outlined" sx={{ mt: 2 }}>
                     <InputLabel id="fields-select-label">Select Fields</InputLabel>

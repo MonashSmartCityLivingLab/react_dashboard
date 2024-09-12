@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');
 const cors = require('cors');
 const { Client } = require('ssh2');
+const {getMeterData} = require("./src/backend/getMeterData");
 require('dotenv').config();
 
 const app = express();
@@ -21,7 +22,7 @@ app.get('/cloud-data', (req, res) => {
     console.log('SSH Client :: ready');
 
     // Execute a command on the VM, e.g., retrieving data
-    conn.exec('head -n 5 /home/ubuntu/data/central-data/Emerald_05-08-2024-03-09-2024.csv', (err, stream) => {
+    conn.exec('cat /home/ubuntu/data/central-data/Emerald_05-08-2024-03-09-2024.csv', (err, stream) => {
       if (err) {
         console.error('Error executing command on VM:', err);
         res.status(500).send('Error executing command on VM');
@@ -33,13 +34,14 @@ app.get('/cloud-data', (req, res) => {
       // Collect data from the stream
       stream.on('data', (chunk) => {
         console.log('Receiving data chunk:', chunk.toString()); // Add logging here to see incoming data
-        data += chunk;
+        data += chunk.toString();
       });
 
       // Handle the stream close event
       stream.on('close', () => {
         conn.end(); // Close the SSH connection
-        res.send(data); // Send the retrieved data back to the client
+        const averages = getMeterData(data); // Process the raw data
+        res.json(averages); // Send the processed averages back to the client
       });
 
       // Handle stream errors
