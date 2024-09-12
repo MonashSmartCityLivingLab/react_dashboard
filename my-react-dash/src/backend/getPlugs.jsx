@@ -3,19 +3,25 @@ import Papa from 'papaparse';
 // URL pointing to the CSV file on your local server
 const csvUrl = 'http://localhost:3001/data/data_2024-09-03/current_payload_2024-09-03.csv';
 
+const aliasMapping = {"athom-smart-plug-v2-f16702":"Lounge TV",
+  "athom-smart-plug-v2-f18175":"Microwave",
+  "athom-smart-plug-v2-f1867c":"Washing Machine",
+  "athom-smart-plug-v2-a76459": "Kettle",
+  "athom-smart-plug-v2-3ff088": "Heater"
+};
 // Function to group data by device_name and filter non-zero and non-empty values for the current field
 export const groupDataByPlug = (data) => {
   const groupedData = {};
 
   data.forEach((record) => {
-    const { device_name, current } = record;
+    const { device_name, timestamp, current } = record;
 
     // Check if the current field exists and is not zero or empty
     if (current && Number(current) !== 0 && current.trim() !== '') {
       if (!groupedData[device_name]) {
         groupedData[device_name] = [];
       }
-      groupedData[device_name].push({ device_name, current }); // Only keep the device_name and current fields
+      groupedData[device_name].push({ device_name, current, timestamp }); 
     }
   });
 
@@ -23,6 +29,7 @@ export const groupDataByPlug = (data) => {
   return Object.keys(groupedData).map((deviceName, index) => ({
     id: index + 1,
     name: deviceName,
+    alias: aliasMapping[deviceName] || deviceName,
     info: groupedData[deviceName], // Contains all the filtered records related to the device
   }));
 };

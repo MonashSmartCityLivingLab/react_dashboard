@@ -34,11 +34,11 @@ const Dashboard = () => {
     setSelectedFields(event.target.value);
   };
 
-  // Find the selected plug's information
-  const selectedPlugInfo = smartPlugs.find((plug) => plug.name === selectedPlug);
+// Find the selected plug's information using the alias
+const selectedPlugInfo = smartPlugs.find((plug) => plug.alias === selectedPlug);
 
   // Fields available for selection
-  const availableFields = ["id", "data", "timestamp", "current"]; // Adjust fields as needed based on your data
+  const availableFields = ["timestamp", "current"]; // Adjust fields as needed based on your data
 
   return (
     <NavigationMenu>
@@ -66,8 +66,8 @@ const Dashboard = () => {
                   label="Select Smart Plug"
                 >
                   {smartPlugs.map((plug) => (
-                    <MenuItem key={plug.id} value={plug.name}>
-                      {plug.name}
+                    <MenuItem key={plug.id} value={plug.alias}>
+                    {plug.alias}
                     </MenuItem>
                   ))}
                 </Select>
