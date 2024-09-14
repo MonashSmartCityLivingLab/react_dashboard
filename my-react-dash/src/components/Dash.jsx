@@ -95,13 +95,13 @@ const Dashboard = () => {
               {selectedDayData ? (
                 <Box sx={{ mt: 2 }}>
                   <Typography variant="body1">
-                    <strong>Average Consumption:</strong>{" "}
+                    <strong>Total Consumption:</strong>{" "}
                     {selectedDayData.averageConsumption
                       ? selectedDayData.averageConsumption.toFixed(4) + " kWh"
                       : "N/A"}
                   </Typography>
                   <Typography variant="body1">
-                    <strong>Average Cost:</strong>{" "}
+                    <strong>Total Cost:</strong>{" "}
                     {selectedDayData.averageCost ? "$" + selectedDayData.averageCost.toFixed(4) : "N/A"}
                   </Typography>
                 </Box>
