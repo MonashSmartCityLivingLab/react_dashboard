@@ -26,7 +26,7 @@ const getMeterData = (csvData) => {
   // Calculate averages for each day
   const averages = Object.entries(groupedData).map(([date, { totalConsumption, totalCost, count }]) => ({
     date,
-    averageConsumption: totalConsumption / count,
+    averageConsumption: totalConsumption,
     averageCost: totalCost,
   }));
 
