@@ -1,10 +1,10 @@
-const { parse } = require('papaparse'); // Assuming you're using papaparse for CSV parsing
-const fs = require('fs');
+import Papa from 'papaparse'; // Assuming you're using papaparse for CSV parsing
+import fs from 'fs';
 
 // Function to process CSV data and group it by day with average calculations
 const getMeterData = (csvData) => {
   // Parse the CSV data into JSON format
-  const { data } = parse(csvData, { header: true, skipEmptyLines: true });
+  const { data } = Papa.parse(csvData, { header: true, skipEmptyLines: true });
 
   // Object to store grouped data by day
   const groupedData = {};
@@ -33,4 +33,4 @@ const getMeterData = (csvData) => {
   return averages;
 };
 
-module.exports = { getMeterData };
+export {getMeterData}

@@ -1,8 +1,14 @@
 {
   "dependencies": {
+    "@chakra-ui/react": "^2.8.2",
     "@craco/craco": "^7.1.0",
+    "@emotion/react": "^11.13.3",
+    "@emotion/styled": "^11.13.0",
+    "@mui/x-date-pickers": "^7.17.0",
     "buffer": "^6.0.3",
     "csv-parser": "^3.0.0",
+    "dayjs": "^1.11.13",
+    "framer-motion": "^11.5.4",
     "stream-browserify": "^3.0.0"
   }
 }

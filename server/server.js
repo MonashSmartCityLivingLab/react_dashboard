@@ -1,9 +1,11 @@
-const express = require('express');
-const path = require('path');
-const cors = require('cors');
-const { Client } = require('ssh2');
-const {getMeterData} = require("./src/backend/getMeterData");
-require('dotenv').config();
+import express from 'express';
+import cors from 'cors';
+import { Client } from 'ssh2';
+import { getMeterData } from './getMeterData.js';
+import fs from 'fs';
+import dotenv from 'dotenv';
+
+dotenv.config(); // Ensure this is called to load environment variables
 
 const app = express();
 const port = 3001; // Use any available port
@@ -11,12 +13,13 @@ const port = 3001; // Use any available port
 // Serve local files from the specified directory
 app.use(cors({ origin: 'http://localhost:3002' }));
 app.use('/data', express.static('/home/scllpi1/smart_plug_data'));
-console.log("reached 13");
+console.log('reached 13');
+
 // Route to connect to the cloud VM and retrieve data
 app.get('/cloud-data', (req, res) => {
-  console.log("reached 16");
+  console.log('reached 16');
   const conn = new Client();
-  console.log("reached 18");
+  console.log('reached 18');
 
   conn.on('ready', () => {
     console.log('SSH Client :: ready');
@@ -46,12 +49,12 @@ app.get('/cloud-data', (req, res) => {
 
       // Handle stream errors
       stream.on('error', (streamErr) => {
-        console.log('Stream closed with code:', code, 'and signal:', signal);
         console.error('Stream Error:', streamErr);
         res.status(500).send('Error processing data from VM');
       });
-       // Log stderr data if present
-       stream.stderr.on('data', (stderr) => {
+
+      // Log stderr data if present
+      stream.stderr.on('data', (stderr) => {
         console.error('STDERR:', stderr.toString());
       });
     });
@@ -68,7 +71,7 @@ app.get('/cloud-data', (req, res) => {
     host: '118.138.233.51', // VM IP address
     port: 22, // SSH port, default is 22
     username: 'ubuntu', // VM username
-    privateKey: require('fs').readFileSync('/react_dashboard/my-react-dash/ENG.pem'), // Replace with the actual path to your .pem file
+    privateKey: fs.readFileSync('./ENG.pem'), // Replace with the actual path to your .pem file
   });
 });
 
