@@ -6,6 +6,10 @@ import InputLabel from "@mui/material/InputLabel";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import Paper from "@mui/material/Paper";
+import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import NavigationMenu from "./NavigationMenu";
 import { getSmartPlugs } from "../backend/getPlugs"; // Import the backend logic
 
@@ -15,16 +19,8 @@ const Dashboard = () => {
   const [selectedFields, setSelectedFields] = useState([]);
   const [averageData, setAverageData] = useState([]);
   const [selectedDay, setSelectedDay] = useState("");
+  const [selectedPlugDay, setSelectedPlugDay] = useState("")
 
-  // Fetch smart plugs data when the component mounts
-  useEffect(() => {
-    const fetchData = async () => {
-      const plugs = await getSmartPlugs();
-      setSmartPlugs(plugs);
-    };
-
-    fetchData();
-  }, []);
 
   // Fetch central meter data from cloud server
   // Fetch average data on component mount
@@ -56,6 +52,24 @@ const Dashboard = () => {
   const handleDayChange = (event) => {
     setSelectedDay(event.target.value);
   };
+
+  const handlePlugChange = (date) => {
+    setSelectedPlugDay(date ? date.format('YYYY-MM-DD') : "");
+  };
+
+  // Fetch smart plugs data when the component mounts
+  useEffect(() => {
+    const fetchData = async () => {
+      if (selectedPlugDay) {
+        console.log(selectedPlugDay)
+        const plugs = await getSmartPlugs(selectedPlugDay);
+        setSmartPlugs(plugs);
+      }
+    };
+
+    fetchData();
+  }, [selectedPlugDay]);
+
 
   // Find the selected day's average data
   const selectedDayData = averageData.find((data) => data.date === selectedDay);
@@ -112,8 +126,18 @@ const Dashboard = () => {
               )}
             </Paper>
           </Box>
-          <Box>
-            <Paper elevation={3} sx={{ p: 2, maxWidth: 400 }}>
+          <Box sx={{display:"flex", gap:2}}>
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <DemoContainer components={['DatePicker']}>
+                  <DatePicker
+                    label="Select Date"
+                    onChange={handlePlugChange}
+                    renderInput={(params) => <TextField {...params} />}
+                  />
+
+                </DemoContainer>
+              </LocalizationProvider>
+              <Paper elevation={3} sx={{ p: 2, maxWidth: 400 }}>
               <Typography variant="h6" gutterBottom>
                 Smart Plug Information
               </Typography>

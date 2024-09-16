@@ -1,14 +1,13 @@
 import Papa from 'papaparse';
 
-// URL pointing to the CSV file on your local server
-const csvUrl = 'http://localhost:3001/data/data_2024-09-03/current_payload_2024-09-03.csv';
-
-const aliasMapping = {"athom-smart-plug-v2-f16702":"Lounge TV",
+const aliasMapping = {
+  "athom-smart-plug-v2-f16702":"Lounge TV",
   "athom-smart-plug-v2-f18175":"Microwave",
   "athom-smart-plug-v2-f1867c":"Washing Machine",
   "athom-smart-plug-v2-a76459": "Kettle",
   "athom-smart-plug-v2-3ff088": "Heater"
 };
+
 // Function to group data by device_name and filter non-zero and non-empty values for the current field
 export const groupDataByPlug = (data) => {
   const groupedData = {};
@@ -34,8 +33,11 @@ export const groupDataByPlug = (data) => {
   }));
 };
 
-// Function to fetch CSV data and group it by smart plugs
-export const getSmartPlugs = async () => {
+// Function to fetch CSV data and group it by smart plugs based on the selected date
+export const getSmartPlugs = async (selectedDate) => {
+  console.log(selectedDate)
+  const csvUrl = `http://localhost:3001/data/data_${selectedDate}/current_payload_${selectedDate}.csv`;
+  
   try {
     // Fetch the CSV file from the server
     const response = await fetch(csvUrl);
@@ -53,7 +55,6 @@ export const getSmartPlugs = async () => {
         header: true,
         complete: (results) => {
           const groupedData = groupDataByPlug(results.data);
-          console.log('Grouped Data:', groupedData); // Log grouped results for debugging
           resolve(groupedData);
         },
         error: reject,
