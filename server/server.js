@@ -74,7 +74,7 @@ app.get('/cloud-data', (req, res) => {
   });
 });
 
-// Route for getting appliance data
+// Route for getting appliance latest-values
 app.get('/appliance-status/:sensorName', async (req, res) => {
   const sensorName = req.params.sensorName;
   
@@ -94,6 +94,32 @@ app.get('/appliance-status/:sensorName', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch appliance status' });
   }
 });
+
+// Route for turning the appliance on or off
+app.post('/appliance-status/:sensorName/:action', async (req, res) => {
+  const { sensorName, action } = req.params;
+
+  const validActions = ['turn-on', 'turn-off'];
+  if (!validActions.includes(action)) {
+    return res.status(400).json({ error: 'Invalid action' });
+  }
+
+  try {
+    const response = await fetch(`http://localhost:4100/sensor/${sensorName}/${action}`, {
+      method: 'POST'
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to perform action');
+    }
+
+    res.json({ message: `Device ${action} successfully` });
+  } catch (error) {
+    console.error(`Error performing ${action} for ${sensorName}:`, error);
+    res.status(500).json({ error: `Failed to ${action} device` });
+  }
+});
+
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
 });

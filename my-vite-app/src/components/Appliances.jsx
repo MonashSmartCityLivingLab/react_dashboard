@@ -11,6 +11,7 @@ import Paper from "@mui/material/Paper";
 import NavigationMenu from "./NavigationMenu";
 import Button from '@mui/material/Button';
 import AddIcon from '@mui/icons-material/Add';
+import Switch from '@mui/material/Switch';
 
 export default function Appliances() {
     const [monitoredDevices, setMonitoredDevices] = useState([
@@ -47,6 +48,25 @@ export default function Appliances() {
                 });
         });
     }, [monitoredDevices]);
+       // Function to handle toggle
+       const handleToggle = async (device, isOn) => {
+        const sensorName = getSensorNameFromDevice(device);
+        const action = isOn ? 'turn-off' : 'turn-on';
+        
+        try {
+            const response = await fetch(`http://localhost:3001/appliance-status/${sensorName}/${action}`, {
+                method: 'POST'
+            });
+            if (response.ok) {
+                setDeviceStatuses(prevStatuses => ({
+                    ...prevStatuses,
+                    [device]: !isOn
+                }));
+            }
+        } catch (error) {
+            console.error(`Error toggling ${device}:`, error);
+        }
+    };
         // Dummy function to map device to sensor name, you'll want to use your actual aliasMapping here
     const getSensorNameFromDevice = (device) => {
         const aliasMapping = {
@@ -65,15 +85,21 @@ export default function Appliances() {
             <Box sx={{ padding: "20px", marginTop: "64px", display: "flex", gap: 3 }}>
                 {/* Monitored Devices */}
                 <Box sx={{ flex: 1 }}>
-                    <Paper elevation={3} sx={{ p: 3 }}>
+                <Paper elevation={3} sx={{ p: 3 }}>
                         <Typography variant="h6" gutterBottom>
                             Monitored Appliances
                         </Typography>
                         {monitoredDevices.length > 0 ? (
                             monitoredDevices.map((device, index) => (
-                                <Typography key={index} variant="body1">
-                                    {device} - {deviceStatuses[device] ? "On" : "Off"}
-                                </Typography>
+                                <Box key={index} display="flex" alignItems="center" justifyContent="space-between">
+                                    <Typography variant="body1">
+                                        {device} - {deviceStatuses[device] ? "On" : "Off"}
+                                    </Typography>
+                                    <Switch
+                                        checked={deviceStatuses[device] || false}
+                                        onChange={() => handleToggle(device, deviceStatuses[device])}
+                                    />
+                                </Box>
                             ))
                         ) : (
                             <Typography variant="body2">No monitored devices found.</Typography>
