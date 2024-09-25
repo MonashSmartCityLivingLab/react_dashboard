@@ -11,7 +11,7 @@ const app = express();
 const port = 3001; // Use any available port
 
 // Serve local files from the specified directory
-app.use(cors({ origin: "*" }));
+app.use(cors({ origin: "http://localhost:3001" }));
 app.use('/data', express.static('/home/scllpi1/smart_plug_data'));
 console.log('reached 13');
 
