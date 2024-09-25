@@ -10,6 +10,7 @@ import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import Chart from "react-apexcharts";
 import NavigationMenu from "./NavigationMenu";
 import { getSmartPlugs } from "../backend/getPlugs"; // Import the backend logic
 
@@ -19,10 +20,8 @@ const Dashboard = () => {
   const [selectedFields, setSelectedFields] = useState([]);
   const [averageData, setAverageData] = useState([]);
   const [selectedDay, setSelectedDay] = useState("");
-  const [selectedPlugDay, setSelectedPlugDay] = useState("")
+  const [selectedPlugDay, setSelectedPlugDay] = useState("");
 
-
-  // Fetch central meter data from cloud server
   // Fetch average data on component mount
   useEffect(() => {
     const fetchAverageData = async () => {
@@ -70,16 +69,53 @@ const Dashboard = () => {
     fetchData();
   }, [selectedPlugDay]);
 
-
   // Find the selected day's average data
   const selectedDayData = averageData.find((data) => data.date === selectedDay);
+
   // Find the selected plug's information using the alias
   const selectedPlugInfo = smartPlugs.find((plug) => plug.alias === selectedPlug);
 
   // Extract all unique days from the average data
   const availableDays = [...new Set(averageData.map((data) => data.date))];
+
   // Fields available for selection
   const availableFields = ["timestamp", "current"]; // Adjust fields as needed based on your data
+
+  // Data for ApexCharts
+  const chartOptions = {
+    chart: {
+      id: "energy-usage-bar-chart",
+      toolbar: {
+        show: true, // Hide toolbar
+      },
+    },
+    xaxis: {
+      categories: availableDays, // X-axis categories (dates)
+      title: {
+        text: "Date",
+      },
+    },
+    yaxis: {
+      title: {
+        text: "Energy Usage (kWh)",
+      },
+      labels: {
+        formatter: (val) => val.toFixed(2),
+      },
+    },
+    title: {
+      text: "Daily Energy Usage",
+      align: "center",
+    },
+
+  };
+
+  const chartSeries = [
+    {
+      name: "Energy Usage (kWh)",
+      data: averageData.map((data) => data.averageConsumption || 0), // Y-axis data
+    },
+  ];
 
   return (
     <NavigationMenu>
@@ -116,7 +152,9 @@ const Dashboard = () => {
                   </Typography>
                   <Typography variant="body1">
                     <strong>Total Cost:</strong>{" "}
-                    {selectedDayData.averageCost ? "$" + selectedDayData.averageCost.toFixed(4) : "N/A"}
+                    {selectedDayData.averageCost
+                      ? "$" + selectedDayData.averageCost.toFixed(4)
+                      : "N/A"}
                   </Typography>
                 </Box>
               ) : (
@@ -124,25 +162,35 @@ const Dashboard = () => {
                   No data available for the selected day.
                 </Typography>
               )}
+              {/* Add ApexCharts Bar Chart here */}
+              <Box sx={{ mt: 4 }}>
+                <Chart
+                  options={chartOptions}
+                  series={chartSeries}
+                  type="bar"
+                  height={350}
+                />
+              </Box>
             </Paper>
           </Box>
-          <Box sx={{display:"flex", gap:2}}>
-              <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <DemoContainer components={['DatePicker']}>
-                  <DatePicker
-                    label="Select Date"
-                    onChange={handlePlugChange}
-                    renderInput={(params) => <TextField {...params} />}
-                  />
-
-                </DemoContainer>
-              </LocalizationProvider>
-              <Paper elevation={3} sx={{ p: 2, maxWidth: 400 }}>
+          <Box sx={{ display: "flex", gap: 2 }}>
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <DemoContainer components={["DatePicker"]}>
+                <DatePicker
+                  label="Select Date"
+                  onChange={handlePlugChange}
+                  renderInput={(params) => <TextField {...params} />}
+                />
+              </DemoContainer>
+            </LocalizationProvider>
+            <Paper elevation={3} sx={{ p: 2, maxWidth: 400 }}>
               <Typography variant="h6" gutterBottom>
                 Smart Plug Information
               </Typography>
               <FormControl fullWidth variant="outlined">
-                <InputLabel id="smart-plug-select-label">Select Smart Plug</InputLabel>
+                <InputLabel id="smart-plug-select-label">
+                  Select Smart Plug
+                </InputLabel>
                 <Select
                   labelId="smart-plug-select-label"
                   value={selectedPlug}

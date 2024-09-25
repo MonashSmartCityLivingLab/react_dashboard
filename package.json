@@ -5,10 +5,12 @@
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",
     "@mui/x-date-pickers": "^7.17.0",
+    "apexcharts": "^3.53.0",
     "buffer": "^6.0.3",
     "csv-parser": "^3.0.0",
     "dayjs": "^1.11.13",
     "framer-motion": "^11.5.4",
+    "react-apexcharts": "^1.4.1",
     "stream-browserify": "^3.0.0"
   }
 }

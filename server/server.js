@@ -11,15 +11,14 @@ const app = express();
 const port = 3001; // Use any available port
 
 // Serve local files from the specified directory
-app.use(cors({ origin: 'http://localhost:3002' }));
+app.use(cors({ origin: "*" }));
 app.use('/data', express.static('/home/scllpi1/smart_plug_data'));
 console.log('reached 13');
 
+
 // Route to connect to the cloud VM and retrieve data
 app.get('/cloud-data', (req, res) => {
-  console.log('reached 16');
   const conn = new Client();
-  console.log('reached 18');
 
   conn.on('ready', () => {
     console.log('SSH Client :: ready');
@@ -75,6 +74,26 @@ app.get('/cloud-data', (req, res) => {
   });
 });
 
+// Route for getting appliance data
+app.get('/appliance-status/:sensorName', async (req, res) => {
+  const sensorName = req.params.sensorName;
+  
+  try {
+    const response = await fetch(`http://localhost:4100/sensor/${sensorName}/latest-values`);
+    
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+
+    const data = await response.json();
+    const isOn = data.isOn;
+    
+    res.json({ isOn });
+  } catch (error) {
+    console.error('Error fetching appliance status:', error);
+    res.status(500).json({ error: 'Failed to fetch appliance status' });
+  }
+});
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
 });
