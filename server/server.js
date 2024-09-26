@@ -11,7 +11,7 @@ const app = express();
 const port = 3001; // Use any available port
 
 // Serve local files from the specified directory
-app.use(cors({ origin: "http://localhost:3001" }));
+app.use(cors({ origin: "*" }));
 app.use('/data', express.static('/home/scllpi1/smart_plug_data'));
 console.log('reached 13');
 
@@ -75,20 +75,23 @@ app.get('/cloud-data', (req, res) => {
 });
 
 // Route for getting appliance latest-values
-app.get('/appliance-status/:sensorName', async (req, res) => {
-  const sensorName = req.params.sensorName;
-  
+app.get('/appliance-status', async (req, res) => {
   try {
-    const response = await fetch(`http://localhost:4100/sensor/${sensorName}/latest-values`);
+    const response = await fetch(`http://localhost:4100/latest-values`);
     
     if (!response.ok) {
-      throw new Error('Network response was not ok');
+      console.error(`Error: Received status ${response.status} from /latest-values`);
+      return res.status(500).json({ error: `Failed to fetch appliance status, status: ${response.status}` });
     }
 
     const data = await response.json();
-    const isOn = data.isOn;
-    
-    res.json({ isOn });
+    const statuses = data.map((device) => ({
+      deviceName: device.deviceName,
+      isOn: device.isOn,
+      sensorName: device.sensorName,
+    }));
+
+    res.json(statuses);
   } catch (error) {
     console.error('Error fetching appliance status:', error);
     res.status(500).json({ error: 'Failed to fetch appliance status' });
