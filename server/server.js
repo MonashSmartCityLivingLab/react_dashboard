@@ -39,8 +39,12 @@ const executeSSHCommand = (host, username, privateKeyPath, command, res, dataPro
 
       stream.on('close', () => {
         conn.end(); // Close SSH connection
-        if (dataProcessor) dataProcessor(data); // Process data if needed
-        res.json({ success: true, data }); // Send the raw or processed data back
+        if (dataProcessor) {
+          const processedData = dataProcessor(data); // Process data if needed
+          res.json({ success: true, data: processedData }); // Send processed data back
+        } else {
+          res.json({ success: true, data }); // Send raw data if no processor is provided
+        }
       });
 
       stream.on('error', (streamErr) => {

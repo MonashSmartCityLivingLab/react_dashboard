@@ -5,6 +5,7 @@ import fs from 'fs';
 const getMeterData = (csvData) => {
   // Parse the CSV data into JSON format
   const { data } = Papa.parse(csvData, { header: true, skipEmptyLines: true });
+  console.log("Reached getMeterData")
 
   // Object to store grouped data by day
   const groupedData = {};
