@@ -16,15 +16,14 @@ app.use('/data', express.static('/home/scllpi1/smart_plug_data'));
 console.log('reached 13');
 
 
-// Route to connect to the cloud VM and retrieve data
-app.get('/cloud-data', (req, res) => {
+// Reusable function for SSH command execution
+const executeSSHCommand = (host, username, privateKeyPath, command, res, dataProcessor) => {
   const conn = new Client();
 
   conn.on('ready', () => {
     console.log('SSH Client :: ready');
-
-    // Execute a command on the VM, e.g., retrieving data
-    conn.exec('cat /home/ubuntu/data/central-data/Emerald_05-08-2024-03-09-2024.csv', (err, stream) => {
+    
+    conn.exec(command, (err, stream) => {
       if (err) {
         console.error('Error executing command on VM:', err);
         res.status(500).send('Error executing command on VM');
@@ -33,52 +32,66 @@ app.get('/cloud-data', (req, res) => {
 
       let data = '';
 
-      // Collect data from the stream
       stream.on('data', (chunk) => {
-        console.log('Receiving data chunk:', chunk.toString()); // Add logging here to see incoming data
+        console.log('Receiving data chunk:', chunk.toString());
         data += chunk.toString();
       });
 
-      // Handle the stream close event
       stream.on('close', () => {
-        conn.end(); // Close the SSH connection
-        const averages = getMeterData(data); // Process the raw data
-        res.json(averages); // Send the processed averages back to the client
+        conn.end(); // Close SSH connection
+        if (dataProcessor) dataProcessor(data); // Process data if needed
+        res.json({ success: true, data }); // Send the raw or processed data back
       });
 
-      // Handle stream errors
       stream.on('error', (streamErr) => {
         console.error('Stream Error:', streamErr);
         res.status(500).send('Error processing data from VM');
       });
 
-      // Log stderr data if present
       stream.stderr.on('data', (stderr) => {
         console.error('STDERR:', stderr.toString());
       });
     });
   });
 
-  // Handle SSH connection errors
   conn.on('error', (connErr) => {
     console.error('SSH Client :: error', connErr);
     res.status(500).send('Failed to connect to the cloud VM');
   });
 
-  // Connect to the VM using SSH
   conn.connect({
-    host: '118.138.233.51', // VM IP address
-    port: 22, // SSH port, default is 22
-    username: 'ubuntu', // VM username
-    privateKey: fs.readFileSync('./ENG.pem'), // Replace with the actual path to your .pem file
+    host: host, // VM IP address
+    port: 22, // Default SSH port
+    username: username, // VM username
+    privateKey: fs.readFileSync(privateKeyPath), // Path to your .pem file
   });
+};
+
+// Route for retrieving 'central-data'
+app.get('/cloud-data', (req, res) => {
+  const command = 'cat /home/ubuntu/data/central-data/Emerald_05-08-2024-03-09-2024.csv';
+  executeSSHCommand('118.138.233.51', 'ubuntu', './ENG.pem', command, res, getMeterData);
+});
+
+// Route for retrieving 'load_dis' data
+app.get('/load-dis/:fileName', (req, res) => {
+  const { fileName } = req.params;
+  const command = `cat /home/ubuntu/data/load_dis/${fileName}`;
+  executeSSHCommand('118.138.233.51', 'ubuntu', './ENG.pem', command, res, null); // Add a processor function if needed
+});
+
+// Route for retrieving 'preds' data
+app.get('/preds/:fileName', (req, res) => {
+  const { fileName } = req.params;
+  const command = `cat /home/ubuntu/data/preds/${fileName}`;
+  executeSSHCommand('118.138.233.51', 'ubuntu', './ENG.pem', command, res, null); // Add a processor function if needed
 });
 
 // Route for getting appliance latest-values
 app.get('/appliance-status', async (req, res) => {
   try {
     const response = await fetch(`http://localhost:4100/latest-values`);
-    
+
     if (!response.ok) {
       console.error(`Error: Received status ${response.status} from /latest-values`);
       return res.status(500).json({ error: `Failed to fetch appliance status, status: ${response.status}` });
