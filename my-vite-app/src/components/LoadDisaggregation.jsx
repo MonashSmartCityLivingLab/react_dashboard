@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import ReactApexChart from 'react-apexcharts';
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
@@ -12,8 +12,11 @@ import Checkbox from "@mui/material/Checkbox";
 import ListItemText from "@mui/material/ListItemText";
 import OutlinedInput from "@mui/material/OutlinedInput";
 
-// Import the CSV file
-import csvFile from '../mock-data/prd_Tutorial_1_AMPds2_29_09_2024_21_09_50.csv?raw';
+// Import the CSV files
+import csvFile1 from '../mock-data/output_1.csv?raw';
+import csvFile2 from '../mock-data/output_2.csv?raw';
+import csvFile3 from '../mock-data/output_3.csv?raw';
+import csvFile4 from '../mock-data/output_4.csv?raw';
 
 // Helper function to parse CSV data and round values
 const parseCSV = (csvData) => {
@@ -22,21 +25,26 @@ const parseCSV = (csvData) => {
 };
 
 const APPLIANCES = ['MCR', 'WME', 'LMP', 'TVE', 'UNK'];
+const DATES = ['September 1', 'September 2', 'September 3', 'September 4'];
 
 export default function LoadDisaggregation() {
   const [chartOptions, setChartOptions] = useState({});
   const [chartSeries, setChartSeries] = useState([]);
   const [selectedAppliances, setSelectedAppliances] = useState(APPLIANCES);
   const [parsedData, setParsedData] = useState([]);
+  const [selectedDate, setSelectedDate] = useState('September 1');
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const data = parseCSV(csvFile);
-        setParsedData(data);
-        updateChartData(data, selectedAppliances);
+        const data1 = parseCSV(csvFile1);
+        const data2 = parseCSV(csvFile2);
+        const data3 = parseCSV(csvFile3);
+        const data4 = parseCSV(csvFile4);
+        setParsedData([data1, data2, data3, data4]);
+        updateChartData([data1, data2, data3, data4], selectedAppliances, 0);
       } catch (error) {
-        console.error('Error loading or parsing CSV file:', error);
+        console.error('Error loading or parsing CSV files:', error);
       }
     };
 
@@ -44,11 +52,15 @@ export default function LoadDisaggregation() {
   }, []);
 
   useEffect(() => {
-    updateChartData(parsedData, selectedAppliances);
-  }, [selectedAppliances, parsedData]);
+    updateChartData(parsedData, selectedAppliances, DATES.indexOf(selectedDate));
+  }, [selectedAppliances, parsedData, selectedDate]);
 
-  const updateChartData = (data, appliances) => {
-    if (data.length === 0) return;
+  const updateChartData = (allData, appliances, dateIndex) => {
+    if (allData.length === 0) return;
+
+    const data = allData[dateIndex];
+    const timeIntervals = data.length;
+    const minutesPerInterval = 1440 / timeIntervals; // 1440 minutes in a day
 
     const series = appliances.map((appliance, index) => ({
       name: appliance,
@@ -63,7 +75,17 @@ export default function LoadDisaggregation() {
         height: 350,
       },
       xaxis: {
-        categories: data.map((_, index) => index + 1),
+        categories: data.map((_, i) => {
+          const minutes = i * minutesPerInterval;
+          const hours = Math.floor(minutes / 60);
+          const mins = minutes % 60;
+          return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+        }),
+        labels: {
+          rotate: -45,
+          rotateAlways: false,
+          maxHeight: 120,
+        },
       },
       yaxis: {
         title: {
@@ -74,10 +96,10 @@ export default function LoadDisaggregation() {
         },
       },
       stroke: {
-        curve: 'smooth',
+        curve: 'straight', // Changed from 'smooth' to 'straight'
       },
       title: {
-        text: 'Load Disaggregation',
+        text: `Load Disaggregation - ${selectedDate}`,
         align: 'left',
       },
       legend: {
@@ -97,6 +119,10 @@ export default function LoadDisaggregation() {
     setSelectedAppliances(typeof value === 'string' ? value.split(',') : value);
   };
 
+  const handleDateChange = (event) => {
+    setSelectedDate(event.target.value);
+  };
+
   return (
     <NavigationMenu>
       <div style={{ padding: "20px", marginTop: "64px" }}>
@@ -104,7 +130,7 @@ export default function LoadDisaggregation() {
           <Box sx={{ flexGrow: 1 }}>
             <Paper elevation={3} sx={{ p: 2, height: 400 }}>
               <Typography variant="h6" gutterBottom>
-                Breakdown of Usage
+                Breakdown of Usage for {selectedDate}
               </Typography>
               {chartSeries.length > 0 ? (
                 <ReactApexChart 
@@ -121,8 +147,24 @@ export default function LoadDisaggregation() {
           <Box sx={{ width: 250 }}>
             <Paper elevation={3} sx={{ p: 2, height: '100%' }}>
               <Typography variant="h6" gutterBottom>
-                Appliances Filter
+                Filters
               </Typography>
+              <FormControl fullWidth sx={{ mb: 2 }}>
+                <InputLabel id="date-select-label">Date</InputLabel>
+                <Select
+                  labelId="date-select-label"
+                  id="date-select"
+                  value={selectedDate}
+                  onChange={handleDateChange}
+                  input={<OutlinedInput label="Date" />}
+                >
+                  {DATES.map((date) => (
+                    <MenuItem key={date} value={date}>
+                      {date}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
               <FormControl fullWidth>
                 <InputLabel id="appliance-select-label">Appliances</InputLabel>
                 <Select
