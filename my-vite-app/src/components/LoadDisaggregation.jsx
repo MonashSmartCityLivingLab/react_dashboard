@@ -84,8 +84,19 @@ export default function LoadDisaggregation() {
         labels: {
           rotate: -45,
           rotateAlways: false,
-          maxHeight: 120,
+          formatter: function(value, timestamp, opts) {
+            if (value === undefined || value === null) return '';
+            const timePart = value.split('.')[0]; // Take only the part before the decimal point
+            const [hours, minutes] = timePart.split(':');
+            const hour = parseInt(hours);
+            if (isNaN(hour)) return '';
+            if (hour % 3 === 0) {
+              return `${hours}:${minutes}`;
+            }
+            return '';
+          },
         },
+        tickAmount: 8,  // Limit the number of ticks shown
       },
       yaxis: {
         title: {
