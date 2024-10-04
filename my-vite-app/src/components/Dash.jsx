@@ -28,6 +28,7 @@ const Dashboard = () => {
       try {
         const response = await fetch("http://localhost:3002/cloud-data");
         const data = await response.json();
+        console.log(data);
         setAverageData(data);
       } catch (error) {
         console.error("Error fetching average data:", error);
@@ -37,6 +38,10 @@ const Dashboard = () => {
     fetchAverageData();
   }, []);
 
+  useEffect(() => {
+    console.log("Updated averageData:", averageData); // This will log the updated state
+  }, [averageData]);
+  
   // Handle plug selection change
   const handleChange = (event) => {
     setSelectedPlug(event.target.value);

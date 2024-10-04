@@ -41,9 +41,9 @@ const executeSSHCommand = (host, username, privateKeyPath, command, res, dataPro
         conn.end(); // Close SSH connection
         if (dataProcessor) {
           const processedData = dataProcessor(data); // Process data if needed
-          res.json({ success: true, data: processedData }); // Send processed data back
+          res.json(processedData); // Send processed data back
         } else {
-          res.json({ success: true, data }); // Send raw data if no processor is provided
+          res.json(data); // Send raw data if no processor is provided
         }
       });
 
@@ -138,6 +138,50 @@ app.post('/appliance-status/:sensorName/:action', async (req, res) => {
     console.error(`Error performing ${action} for ${sensorName}:`, error);
     res.status(500).json({ error: `Failed to ${action} device` });
   }
+});
+
+// Paths to your config files
+const configFilePath = "/taata/configuration/idle-device-management/config.json/config.json";
+
+// Endpoint to get idle configuration data
+app.get('/get-config', (req, res) => {
+    fs.readFile(configFilePath, 'utf-8', (err, data) => {
+        if (err) {
+            return res.status(500).send('Error reading configuration file.');
+        }
+        res.json(JSON.parse(data));
+    });
+});
+
+// Endpoint to update update configuration data
+app.post('/update-config', (req, res) => {
+    const newConfig = req.body;
+
+    // Write the updated config data back to the file
+    fs.writeFile(configFilePath, JSON.stringify(newConfig, null, 2), 'utf-8', (err) => {
+        if (err) {
+            return res.status(500).send('Error writing to configuration file.');
+        }
+
+        // Trigger Gradle build and Docker restart
+        const buildPath = "/idle-device-management"; // Update to your correct path
+        const dockerComposePath = "/taata";
+        const containerName = "idle-device-management"; // Update container name if necessary
+
+        const command = `cd ${buildPath} && ./gradlew build && cd ${dockerComposePath} && docker compose up --force-recreate postgresql mosquitto collector athom-smart-plug athom-presence-sensor idle-device-management`;
+        
+        exec(command, (error, stdout, stderr) => {
+            if (error) {
+                console.error(`Error: ${error.message}`);
+                return res.status(500).send(`Build failed: ${error.message}`);
+            }
+            if (stderr) {
+                console.error(`Stderr: ${stderr}`);
+            }
+            console.log(`Output: ${stdout}`);
+            res.send(`Configuration updated, container ${containerName} rebuilt and restarted successfully.`);
+        });
+    });
 });
 
 app.listen(port, () => {
