@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
+import { Box, Accordion, AccordionSummary, AccordionDetails, Typography } from '@mui/material';
 import Paper from "@mui/material/Paper";
 import Switch from "@mui/material/Switch";
 import Button from "@mui/material/Button";
 import AddIcon from "@mui/icons-material/Add";
 import NavigationMenu from "./NavigationMenu";
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 // Fetching and editing configuration logic (from the Dashboard component)
 const Appliances = () => {
@@ -15,11 +15,11 @@ const Appliances = () => {
   ]);
   const [deviceStatuses, setDeviceStatuses] = useState({});
   const [config, setConfig] = useState(null);
-  const [updatedConfig, setUpdatedConfig] = useState(null);
+  // const [updatedConfig, setUpdatedConfig] = useState(null);
 
   // Fetch monitored devices
   useEffect(() => {
-    fetch(`http://localhost:3002/appliance-status`)
+    fetch(`http://localhost:3001/appliance-status`)
       .then((response) => response.json())
       .then((data) => {
         setMonitoredDevices(data);
@@ -36,11 +36,11 @@ const Appliances = () => {
   useEffect(() => {
     const fetchConfigData = async () => {
       try {
-        const response = await fetch('http://localhost:3002/get-config');
+        const response = await fetch('http://localhost:3001/get-config');
         const data = await response.json();
         console.log(data[0].rooms);
         setConfig(data[0]);
-        setUpdatedConfig(data[0])
+        // setUpdatedConfig(data[0])
       } catch (error) {
         setConfig([]);
         console.error("Error fetching config:', error");
@@ -56,7 +56,7 @@ const Appliances = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:3002/appliance-status/${sensorName}/${action}`,
+        `http://localhost:3001/appliance-status/${sensorName}/${action}`,
         { method: "POST" }
       );
       if (!response.ok) throw new Error("Failed to perform action");
@@ -75,24 +75,26 @@ const Appliances = () => {
     return foundDevice ? foundDevice.sensorName : "";
   };
 
-  // Update config handler
-  const handleConfigChange = (roomIndex, applianceIndex, key, value) => {
-    const newConfig = { ...updatedConfig };
-    newConfig.rooms[roomIndex].appliances[applianceIndex][key] = value;
-    setUpdatedConfig(newConfig);
-  };
 
-  // Submit updated config to the server
-  const handleSubmit = () => {
-    fetch('http://localhost:3002/update-config', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updatedConfig),
-    })
-      .then((response) => response.text())
-      .then((message) => alert(message))
-      .catch((error) => console.error('Error updating config:', error));
-  };
+
+  // // Update config handler
+  // const handleConfigChange = (roomIndex, applianceIndex, key, value) => {
+  //   const newConfig = { ...updatedConfig };
+  //   newConfig.rooms[roomIndex].appliances[applianceIndex][key] = value;
+  //   setUpdatedConfig(newConfig);
+  // };
+
+  // // Submit updated config to the server
+  // const handleSubmit = () => {
+  //   fetch('http://localhost:3001/update-config', {
+  //     method: 'POST',
+  //     headers: { 'Content-Type': 'application/json' },
+  //     body: JSON.stringify(updatedConfig),
+  //   })
+  //     .then((response) => response.text())
+  //     .then((message) => alert(message))
+  //     .catch((error) => console.error('Error updating config:', error));
+  // };
 
   return (
     <NavigationMenu>
@@ -146,49 +148,68 @@ const Appliances = () => {
               </Typography>
             )}
           </Paper>
-        </Box>
-      </Box>
-
-      {/* Config Editing Section */}
+                        {/* Config Editing Section */}
       <Box sx={{ marginTop: "20px" }}>
         {config ? (
           <div>
-            <h2>Appliance Configurations</h2>
+            <h2>Appliance Idle Configurations</h2>
             {config?.rooms.map((room, roomIndex) => (
-              <div key={room.roomName}>
-                <h3>{room.roomName}</h3>
-                {room.appliances.map((appliance, applianceIndex) => (
-                  <div key={appliance.deviceName}>
-                    <h4>{appliance.deviceName}</h4>
-                    {/* <input
-                      type="text"
-                      value={config.rooms[roomIndex].appliances[applianceIndex].deviceName}
-                      onChange={(e) =>
-                        handleConfigChange(roomIndex, applianceIndex, 'deviceName', e.target.value)
-                      }
-                    /> */}
-                    <div>
-                      <span>Start times: </span>
-                      <span>
-                        {config.rooms[roomIndex].appliances[applianceIndex].standardUseTimes.map(item => item.startTime + " ")}
-                      </span>
-                    </div>
-                    <div>
-                      <span>End times: </span>
-                      <span>
-                        {config.rooms[roomIndex].appliances[applianceIndex].standardUseTimes.map(item => item.endTime + " ")}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <Accordion key={room.roomName}>
+                <AccordionSummary
+                  expandIcon={<ExpandMoreIcon />}
+                  aria-controls={`panel${roomIndex}-content`}
+                  id={`panel${roomIndex}-header`}
+                >
+                  <Typography variant="h6">{room.roomName}</Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  {room.appliances.map((appliance, applianceIndex) => (
+                    <Accordion key={appliance.deviceName}>
+                      <AccordionSummary
+                        expandIcon={<ExpandMoreIcon />}
+                        aria-controls={`panel${roomIndex}-${applianceIndex}-content`}
+                        id={`panel${roomIndex}-${applianceIndex}-header`}
+                      >
+                        <Typography>{appliance.deviceName}</Typography>
+                      </AccordionSummary>
+                      <AccordionDetails>
+                        {/* Uncomment if you want to allow renaming appliances */}
+                        {/* 
+                      <input
+                        type="text"
+                        value={config.rooms[roomIndex].appliances[applianceIndex].deviceName}
+                        onChange={(e) =>
+                          handleConfigChange(roomIndex, applianceIndex, 'deviceName', e.target.value)
+                        }
+                      />
+                      */}
+                        <div>
+                          <span>Start times: </span>
+                          <span>
+                            {config.rooms[roomIndex].appliances[applianceIndex].standardUseTimes.map(item => item.startTime + " ")}
+                          </span>
+                        </div>
+                        <div>
+                          <span>End times: </span>
+                          <span>
+                            {config.rooms[roomIndex].appliances[applianceIndex].standardUseTimes.map(item => item.endTime + " ")}
+                          </span>
+                        </div>
+                      </AccordionDetails>
+                    </Accordion>
+                  ))}
+                </AccordionDetails>
+              </Accordion>
             ))}
           </div>
         ) : (
           <p>Loading config data...</p>
         )}
       </Box>
+        </Box>
+      </Box>
 
+{/* 
       <Button
         variant="contained"
         startIcon={<AddIcon />}
@@ -196,7 +217,7 @@ const Appliances = () => {
         sx={{ position: "absolute", bottom: 20, right: 20 }}
       >
         Add Appliance/Device
-      </Button>
+      </Button> */}
     </NavigationMenu>
   );
 };

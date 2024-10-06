@@ -26,7 +26,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchAverageData = async () => {
       try {
-        const response = await fetch("http://localhost:3002/cloud-data");
+        const response = await fetch("http://localhost:3001/cloud-data");
         const data = await response.json();
         console.log(data);
         setAverageData(data);
