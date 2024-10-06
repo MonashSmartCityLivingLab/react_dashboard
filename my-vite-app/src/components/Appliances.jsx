@@ -183,7 +183,6 @@ const Appliances = () => {
                 ))}
               </div>
             ))}
-            <button onClick={handleSubmit}>Submit Changes & Rebuild</button>
           </div>
         ) : (
           <p>Loading config data...</p>
