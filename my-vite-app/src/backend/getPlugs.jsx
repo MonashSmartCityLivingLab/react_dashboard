@@ -36,7 +36,7 @@ export const groupDataByPlug = (data) => {
 // Function to fetch CSV data and group it by smart plugs based on the selected date
 export const getSmartPlugs = async (selectedDate) => {
   console.log(selectedDate)
-  const csvUrl = `http://localhost:3002/data/data_${selectedDate}/current_payload_${selectedDate}.csv`;
+  const csvUrl = `http://localhost:3001/data/data_${selectedDate}/current_payload_${selectedDate}.csv`;
   
   try {
     // Fetch the CSV file from the server

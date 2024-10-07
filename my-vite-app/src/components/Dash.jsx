@@ -21,6 +21,7 @@ const Dashboard = () => {
   const [averageData, setAverageData] = useState([]);
   const [selectedDay, setSelectedDay] = useState("");
   const [selectedPlugDay, setSelectedPlugDay] = useState("");
+  const [lineChartData, setLineChartData] = useState({ xAxis: [], yAxis: [] });
 
   // Fetch average data on component mount
   useEffect(() => {
@@ -83,15 +84,23 @@ const Dashboard = () => {
   // Extract all unique days from the average data
   const availableDays = [...new Set(averageData.map((data) => data.date))];
 
-  // Fields available for selection
-  const availableFields = ["timestamp", "current"]; // Adjust fields as needed based on your data
+// When selectedPlugInfo is updated, create line chart data
+useEffect(() => {
+  if (selectedPlugInfo) {
+    const xAxis = selectedPlugInfo.info.map((record) => record.timestamp);
+    const yAxis = selectedPlugInfo.info.map((record) => record.current);
 
-  // Data for ApexCharts
+    setLineChartData({ xAxis, yAxis });
+  }
+}, [selectedPlugInfo]);
+
+
+  // Data for ApexCharts bar
   const chartOptions = {
     chart: {
       id: "energy-usage-bar-chart",
       toolbar: {
-        show: true, // Hide toolbar
+        show: true, // Keep toolbar
       },
     },
     xaxis: {
@@ -105,20 +114,73 @@ const Dashboard = () => {
         text: "Energy Usage (kWh)",
       },
       labels: {
-        formatter: (val) => val.toFixed(2),
+        formatter: (val) => val.toFixed(2), // Format y-axis values to 2 decimal points
       },
+    },
+    dataLabels: {
+      enabled: false, // Disable numbers (data labels) on top of bars
     },
     title: {
       text: "Daily Energy Usage",
       align: "center",
     },
-
   };
 
   const chartSeries = [
     {
       name: "Energy Usage (kWh)",
       data: averageData.map((data) => data.averageConsumption || 0), // Y-axis data
+    },
+  ];
+
+  // Line Chart for Smart Plug
+  const lineChartOptions = {
+    chart: {
+      id: "smart-plug-line-chart",
+      type: 'line',
+      toolbar: {
+        show: false,
+      },
+    },
+    xaxis: {
+      categories: lineChartData.xAxis, // Use timestamps for X-axis
+      title: {
+        text: "Timestamp",
+      },
+      labels: {
+        rotate: -45, // Rotate labels if they are long
+        formatter: (val) => {
+          // Convert timestamp to 24-hour time format
+          const date = new Date(val);
+          const hours = String(date.getHours()).padStart(2, '0');
+          const minutes = String(date.getMinutes()).padStart(2, '0');
+          return `${hours}:${minutes}`; // Returns HH:mm format
+        }
+      },
+      tickAmount: 10,
+    },
+    yaxis: {
+      title: {
+        text: "Current (A)",
+      },
+      labels: {
+        formatter: (val) => val.toFixed(2), // Format y-axis values to 2 decimal points
+      },
+    },
+    dataLabels: {
+      enabled: false, // Disable numbers on top of data points
+    },
+    title: {
+      text: "Smart Plug Current Over Time",
+      align: "center",
+    },
+  };
+  
+
+  const lineChartSeries = [
+    {
+      name: "Current (A)",
+      data: lineChartData.yAxis, // Use current data for Y-axis
     },
   ];
 
@@ -210,36 +272,14 @@ const Dashboard = () => {
                 </Select>
               </FormControl>
               {selectedPlugInfo && (
-                <Box sx={{ mt: 2, maxHeight: "400px", overflowY: "auto" }}>
-                  <Typography variant="body1">Data Fields:</Typography>
-                  <FormControl fullWidth variant="outlined" sx={{ mt: 2 }}>
-                    <InputLabel id="fields-select-label">Select Fields</InputLabel>
-                    <Select
-                      labelId="fields-select-label"
-                      multiple
-                      value={selectedFields}
-                      onChange={handleFieldSelection}
-                      renderValue={(selected) => selected.join(", ")}
-                      label="Select Fields"
-                    >
-                      {availableFields.map((field) => (
-                        <MenuItem key={field} value={field}>
-                          {field}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                  {/* Display selected fields data */}
-                  {selectedPlugInfo.info.map((record, index) => (
-                    <Paper key={index} elevation={1} sx={{ p: 1, mt: 1 }}>
-                      {selectedFields.map((field) => (
-                        <Typography key={field} variant="body2">
-                          {field}: {record[field]}
-                        </Typography>
-                      ))}
-                    </Paper>
-                  ))}
-                </Box>
+                <Box sx={{ mt: 4 }}>
+                <Chart
+                  options={lineChartOptions}
+                  series={lineChartSeries}
+                  type="line"
+                  height={350}
+                />
+              </Box>
               )}
             </Paper>
           </Box>
